@@ -1,0 +1,37 @@
+name: Update Script From Pastebin
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"  # 5 phút chạy 1 lần
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Fetch latest pastebin script
+        run: |
+          curl -L "https://pastebin.com/raw/wUWxu4BW" -o latest.txt
+
+      - name: Replace file if content changed
+        run: |
+          if ! cmp -s latest.txt chess; then
+            echo "New update found. Applying..."
+            mv latest.txt chess
+          else
+            echo "No update."
+          fi
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "Auto-update from Pastebin" || echo "No changes to commit"
+
+      - name: Push changes
+        run: |
+          git push
